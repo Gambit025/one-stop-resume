@@ -722,6 +722,7 @@ footer {
       </svg>
       下载 PDF
     </button>
+    <p id="downloadHint" style="display:none;font-size:12px;color:var(--text-3);margin-top:4px;">请及时下载，刷新页面后链接失效</p>
   </div>
 
   <!-- PROGRESS -->
@@ -976,6 +977,7 @@ async function generate() {
     stopProgress(true);
     statusEl.innerHTML = '<span class="success-msg">✓ 生成成功，请在下方预览或下载</span>';
     downloadBtn.style.display = 'inline-flex';
+    document.getElementById('downloadHint').style.display = 'block';
     document.getElementById('previewArea').classList.add('visible');
     document.getElementById('previewFrame').src = `/api/preview/${currentJobId}`;
 

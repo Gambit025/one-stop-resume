@@ -20,41 +20,43 @@ TEXT_MODEL = "kimi-k2-turbo-preview"
 # ═══════════════════════════════════════════════════════════
 
 def extract_precise_style(template_pdf: str) -> dict:
-    """从模板 PDF 中精确测量所有排版参数。"""
+    """从模板 PDF 中精确测量所有排版参数（扫描全部页面）。"""
     doc = fitz.open(template_pdf)
     page = doc[0]
     pw, ph = page.rect.width, page.rect.height
 
-    blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE)
-
     lines = []
-    for block in blocks["blocks"]:
-        if "lines" not in block:
-            continue
-        for line in block["lines"]:
-            spans_data = []
-            for span in line["spans"]:
-                if not span["text"].strip():
-                    continue
-                size = span["size"] or 9.0
-                if size < 4:          # 过滤隐藏/装饰性极小字符
-                    continue
-                color = span["color"] if span["color"] is not None else 0
-                spans_data.append({
-                    "text": span["text"],
-                    "size": round(size, 1),
-                    "font": span["font"],
-                    "bold": "Bold" in span["font"] or "bold" in span["font"].lower(),
-                    "serif": "Serif" in span["font"] or "serif" in span["font"].lower(),
-                    "color": f'#{color:06x}',
-                    "origin_x": round(span["origin"][0] or 0, 1),
-                    "origin_y": round(span["origin"][1] or 0, 1),
-                })
-            if spans_data:
-                lines.append({
-                    "bbox": [round(v, 1) for v in line["bbox"]],
-                    "spans": spans_data,
-                })
+    drawings = []
+    for pg in doc:
+        blocks = pg.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE)
+        for block in blocks["blocks"]:
+            if "lines" not in block:
+                continue
+            for line in block["lines"]:
+                spans_data = []
+                for span in line["spans"]:
+                    if not span["text"].strip():
+                        continue
+                    size = span["size"] or 9.0
+                    if size < 4:
+                        continue
+                    color = span["color"] if span["color"] is not None else 0
+                    spans_data.append({
+                        "text": span["text"],
+                        "size": round(size, 1),
+                        "font": span["font"],
+                        "bold": "Bold" in span["font"] or "bold" in span["font"].lower(),
+                        "serif": "Serif" in span["font"] or "serif" in span["font"].lower(),
+                        "color": f'#{color:06x}',
+                        "origin_x": round(span["origin"][0] or 0, 1),
+                        "origin_y": round(span["origin"][1] or 0, 1),
+                    })
+                if spans_data:
+                    lines.append({
+                        "bbox": [round(v, 1) for v in line["bbox"]],
+                        "spans": spans_data,
+                    })
+        drawings.extend(pg.get_drawings())
 
     if not lines:
         doc.close()
@@ -154,8 +156,7 @@ def extract_precise_style(template_pdf: str) -> dict:
         contact_center_x = (cl["bbox"][0] + cl["bbox"][2]) / 2
         contact_centered = abs(contact_center_x - pw / 2) < 50
 
-    # --- 分割线 & 彩色背景检测 ---
-    drawings = page.get_drawings()
+    # --- 分割线 & 彩色背景检测（已在上方跨页收集 drawings）---
     has_divider = len(drawings) > 0
     divider_width = 1.0
     divider_color = "#1a1a1a"
@@ -286,6 +287,8 @@ body {{
   font-size: {s['contact_size']}pt;
   text-align: {'center' if s['contact_centered'] else 'left'};
   margin-bottom: 6pt;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }}
 
 .section {{
@@ -419,21 +422,60 @@ def structure_resume_via_llm(resume_text: str) -> dict:
         temperature=0.1,
     )
 
-    raw = resp.choices[0].message.content.strip()
-    if raw.startswith("```"):
-        lines = raw.split("\n")
-        if lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        raw = "\n".join(lines)
+    def _parse(raw: str) -> dict:
+        raw = raw.strip()
+        if raw.startswith("```"):
+            lines = raw.split("\n")
+            lines = lines[1:] if lines[0].startswith("```") else lines
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            raw = "\n".join(lines)
+        return json.loads(raw)
 
-    return json.loads(raw)
+    raw = resp.choices[0].message.content
+    try:
+        return _parse(raw)
+    except (json.JSONDecodeError, ValueError):
+        print("  JSON 解析失败，重试一次...")
+        resp2 = client.chat.completions.create(
+            model=TEXT_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"请分析以下简历的结构：\n\n{resume_text}"},
+                {"role": "assistant", "content": raw},
+                {"role": "user", "content": "输出格式不正确，请只输出合法的 JSON，不要任何 markdown 包裹或额外文字。"},
+            ],
+            temperature=0.0,
+        )
+        return _parse(resp2.choices[0].message.content)
 
 
 # ═══════════════════════════════════════════════════════════
 # Phase 3: 代码组装 HTML
 # ═══════════════════════════════════════════════════════════
+
+def _font_style_tag() -> str:
+    """优先使用本地字体文件，降级到 Google Fonts CDN。"""
+    font_dir = os.path.join(os.path.dirname(__file__), "static", "fonts")
+    files = {
+        "NotoSansSC-Regular": os.path.join(font_dir, "NotoSansSC-Regular.otf"),
+        "NotoSansSC-Bold":    os.path.join(font_dir, "NotoSansSC-Bold.otf"),
+        "NotoSerifSC-Regular":os.path.join(font_dir, "NotoSerifSC-Regular.otf"),
+        "NotoSerifSC-Bold":   os.path.join(font_dir, "NotoSerifSC-Bold.otf"),
+    }
+    if all(os.path.exists(p) for p in files.values()):
+        def face(family, weight, path):
+            return (f'@font-face {{ font-family: "{family}"; font-weight: {weight}; '
+                    f'src: url("file://{path}") format("opentype"); }}')
+        return "<style>" + "\n".join([
+            face("Noto Sans SC",  400, files["NotoSansSC-Regular"]),
+            face("Noto Sans SC",  700, files["NotoSansSC-Bold"]),
+            face("Noto Serif SC", 400, files["NotoSerifSC-Regular"]),
+            face("Noto Serif SC", 700, files["NotoSerifSC-Bold"]),
+        ]) + "</style>"
+    # 降级：Google Fonts CDN
+    return '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">'
+
 
 def assemble_html(css: str, content: dict) -> str:
     """用确定性代码将 CSS 和结构化内容组装成 HTML。"""
@@ -446,7 +488,7 @@ def assemble_html(css: str, content: dict) -> str:
         '<html lang="zh-CN">',
         '<head>',
         '<meta charset="UTF-8">',
-        '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">',
+        _font_style_tag(),
         f'<style>{css}</style>',
         '</head>',
         '<body>',
@@ -536,18 +578,10 @@ def generate_resume(resume_pdf: str, template_pdf: str, output_dir: str) -> dict
         style = _default_style()
     css = generate_css(style)
 
-    with open(os.path.join(output_dir, "style.json"), "w", encoding="utf-8") as f:
-        json.dump(style, f, ensure_ascii=False, indent=2)
-    with open(os.path.join(output_dir, "style.css"), "w", encoding="utf-8") as f:
-        f.write(css)
-
     print("[Phase 2/3] LLM 语义结构化...")
     resume_text = extract_text(resume_pdf)
     content = structure_resume_via_llm(resume_text)
     print(f"  识别到 {len(content.get('sections', []))} 个板块")
-
-    with open(os.path.join(output_dir, "content.json"), "w", encoding="utf-8") as f:
-        json.dump(content, f, ensure_ascii=False, indent=2)
 
     print("[Phase 3/3] 组装 HTML 并生成 PDF...")
     html = assemble_html(css, content)
