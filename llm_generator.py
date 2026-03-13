@@ -92,7 +92,7 @@ def extract_precise_style(template_pdf: str) -> dict:
         section_title_size = sorted_sizes[1] if len(sorted_sizes) > 1 else 12.0
 
     entry_header_sizes = [sz for sz in sorted_sizes if sz != name_size and sz != section_title_size and sz != body_size and sz > body_size]
-    entry_header_size = entry_header_sizes[0] if entry_header_sizes else round(body_size + 1, 1)
+    entry_header_size = entry_header_sizes[0] if entry_header_sizes else round(body_size + 2, 1)
 
     # --- 字体族 ---
     name_spans = [s for l in lines for s in l["spans"] if s["size"] == name_size]
@@ -323,8 +323,9 @@ body {{
 }}
 
 .entry-subtitle {{
-  font-size: {s['body_size'] + 1}pt;
-  font-weight: 700;
+  font-size: {s['body_size']}pt;
+  font-weight: 400;
+  font-style: italic;
   color: {s['bold_color']};
   margin: 1pt 0;
 }}
@@ -340,15 +341,17 @@ body {{
 }}
 
 .item-list li {{
-  padding-left: {s['bullet_indent'] + 12}pt;
-  text-indent: -{s['bullet_indent'] + 2}pt;
-  margin-bottom: 1pt;
+  display: flex;
+  align-items: baseline;
+  gap: 5pt;
+  padding-left: {max(round(s['bullet_indent'], 1), 4.0)}pt;
+  margin-bottom: 2pt;
 }}
 
 .item-list li::before {{
   content: '{s['bullet_char']}';
-  display: inline-block;
-  width: {s['bullet_indent'] + 2}pt;
+  flex-shrink: 0;
+  min-width: 6pt;
 }}
 
 .bold {{
