@@ -36,15 +36,17 @@ def extract_precise_style(template_pdf: str) -> dict:
             for span in line["spans"]:
                 if not span["text"].strip():
                     continue
+                size = span["size"] or 9.0
+                color = span["color"] if span["color"] is not None else 0
                 spans_data.append({
                     "text": span["text"],
-                    "size": round(span["size"], 1),
+                    "size": round(size, 1),
                     "font": span["font"],
                     "bold": "Bold" in span["font"] or "bold" in span["font"].lower(),
                     "serif": "Serif" in span["font"] or "serif" in span["font"].lower(),
-                    "color": f'#{span["color"]:06x}',
-                    "origin_x": round(span["origin"][0], 1),
-                    "origin_y": round(span["origin"][1], 1),
+                    "color": f'#{color:06x}',
+                    "origin_x": round(span["origin"][0] or 0, 1),
+                    "origin_y": round(span["origin"][1] or 0, 1),
                 })
             if spans_data:
                 lines.append({
@@ -499,9 +501,13 @@ def generate_resume(resume_pdf: str, template_pdf: str, output_dir: str) -> dict
     os.makedirs(output_dir, exist_ok=True)
 
     print("[Phase 1/3] 精确提取模板样式...")
-    style = extract_precise_style(template_pdf)
+    try:
+        style = extract_precise_style(template_pdf)
+        print(f"  提取完成: name={style['name_size']}pt, body={style['body_size']}pt, margin={style['margin_left']}pt")
+    except Exception as e:
+        print(f"  样式提取失败，使用默认样式: {e}")
+        style = _default_style()
     css = generate_css(style)
-    print(f"  提取完成: name={style['name_size']}pt, body={style['body_size']}pt, margin={style['margin_left']}pt")
 
     with open(os.path.join(output_dir, "style.json"), "w", encoding="utf-8") as f:
         json.dump(style, f, ensure_ascii=False, indent=2)
