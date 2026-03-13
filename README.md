@@ -2,13 +2,13 @@
 
 # ✦ One-Stop Resume
 
-### 给我任意一份简历模板，我还你一份格式完美的新简历
+### 你只管打磨实力，排版交给机器
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-2.x-black?logo=flask)](https://flask.palletsprojects.com)
 
-**上传你的简历 PDF + 一份喜欢的模板 → 30 秒后得到一份内容 100% 不变、格式完美复刻的新简历**
+**给我任意一份神级简历模板，我还你一份专属的完美简历**
 
 [**→ 立即使用**](https://one-stop-resume.up.railway.app)
 
@@ -18,9 +18,17 @@
 
 ## 为什么做这个
 
-改简历格式是世界上最无聊的事情之一。你在 Word 里花 2 小时对齐边距、调字号、改行高，最后发现还是不如别人的好看。
+在求职季，改简历格式绝对是世界上最反人类、最消磨意志的事情之一。在 Word 里痛苦地挣扎 2 个小时：为了对齐一个边距把整个页面的排版搞崩；为了调整行高让一页纸刚好塞下所有的项目经历；好不容易搞完，导出 PDF 一看，怎么还是透着一股廉价感？
 
-这个工具解决的问题很简单：**你只管写内容，格式交给机器。**
+**你的时间，应该花在提升内容的含金量上，而不是被行间距折磨。**
+
+你只需上传你现有的 PDF 简历，再加上一份你一眼相中的"别人家的神级模板"——
+
+> **⏳ 30 秒内，魔法发生。**
+
+系统会自动生成一份全新的 PDF 简历：
+- **100% 内容无损** — 你的每一个字、每一个数据、每一段经历，都被原封不动地保留
+- **像素级完美复刻** — 精确剥离并应用目标模板的字体、字号、配色、模块间距与留白
 
 ---
 
@@ -83,7 +91,7 @@ LLM **不参与任何格式决策**——不决定字号、不决定边距、不
 
 ### Phase 3 — 确定性组装（代码）
 
-Phase 1 的 CSS + Phase 2 的 JSON → HTML → Playwright 渲染为 PDF。同样的输入永远产生同样的输出。
+Phase 1 的 CSS + Phase 2 的 JSON → HTML → Playwright 渲染为 PDF。同样的输入永远产生同样的输出，没有任何随机性。
 
 ---
 
@@ -119,7 +127,7 @@ export KIMI_API_KEY=your_key_here
 python app.py
 ```
 
-打开 [http://localhost:8080](http://localhost:8080)，上传两份 PDF，等 30 秒。
+打开 http://localhost:8080，上传两份 PDF，等 30 秒。
 
 ---
 
@@ -137,4 +145,4 @@ python app.py
 
 ## License
 
-MIT · 作者：秦睿涵 · [ryan_25@qq.com](mailto:ryan_25@qq.com)
+MIT · 作者：秦睿涵 · ryan_25@qq.com

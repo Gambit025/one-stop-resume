@@ -710,6 +710,7 @@ footer {
 
   <!-- ACTION BUTTONS -->
   <div class="action-area">
+    <p id="btnHint" style="font-size:13px;color:var(--text-3);min-height:18px;"></p>
     <button class="btn-generate" id="generateBtn" disabled onclick="generate()">
       生成简历
     </button>
@@ -838,11 +839,17 @@ function selectTemplate(id) {
 }
 
 loadTemplates();
+updateBtn();
 
 function updateBtn() {
   const hasResume   = resumeInput.files.length > 0;
   const hasTemplate = selectedTemplateId || templateInput.files.length > 0;
   generateBtn.disabled = !(hasResume && hasTemplate);
+  const hint = document.getElementById('btnHint');
+  if (!hasResume && !hasTemplate) hint.textContent = '请上传你的简历，并选择或上传目标模板';
+  else if (!hasResume) hint.textContent = '还需上传你的简历';
+  else if (!hasTemplate) hint.textContent = '还需选择一个模板风格（下方点击）或上传自定义模板';
+  else hint.textContent = '';
 }
 
 function handleFile(input, cardId, nameId) {
