@@ -18,7 +18,7 @@
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Phase 1   │     │   Phase 2   │     │   Phase 3   │
 │             │     │             │     │             │
-│  PyMuPDF    │     │  Kimi LLM   │     │  代码组装    │
+│  PyMuPDF    │     │     LLM     │     │  代码组装    │
 │  精确提取    │────▶│  语义结构化  │────▶│  HTML + PDF  │
 │  模板样式    │     │  简历内容    │     │  最终输出    │
 │             │     │             │     │             │
@@ -107,7 +107,7 @@ python app.py
 ## Tech Stack
 
 - **样式提取**: PyMuPDF — 从 PDF 坐标系精确测量排版参数
-- **语义理解**: Kimi (Moonshot AI) — 结构化简历内容
+- **语义理解**: LLM— 结构化简历内容
 - **PDF 渲染**: Playwright (headless Chromium) — HTML → PDF
 - **后端**: Flask
 - **前端**: Vanilla HTML/CSS/JS
