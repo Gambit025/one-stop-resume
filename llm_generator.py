@@ -157,8 +157,8 @@ def extract_precise_style(template_pdf: str) -> dict:
     divider_color = "#1a1a1a"
     if has_divider:
         d = drawings[0]
-        divider_width = round(d.get("width", 1.0), 1)
-        c = d.get("color", (0.1, 0.1, 0.1))
+        divider_width = round(d.get("width") or 1.0, 1)
+        c = d.get("color") or d.get("fill") or (0.1, 0.1, 0.1)
         if isinstance(c, tuple) and len(c) == 3:
             r, g, b = [int(v * 255) for v in c]
             divider_color = f"#{r:02x}{g:02x}{b:02x}"
