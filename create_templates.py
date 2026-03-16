@@ -91,26 +91,36 @@ TEMPLATES = [
 @page { size: A4; margin: 0; }
 body {
   width: 595pt; margin: 0 auto;
-  padding: 36pt 48pt 28pt 48pt;
+  padding: 0 0 28pt 0;
   box-sizing: border-box;
   font-family: 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 9pt; color: #2d2d2d; line-height: 1.45;
+  font-size: 9pt; color: #2d2d2d; line-height: 1.5;
 }
-.name { font-size: 22pt; font-weight: 700; color: #111; text-align: center; margin: 0 0 5pt; letter-spacing: 1pt; }
-.contact { font-size: 8.5pt; text-align: center; color: #666; margin-bottom: 10pt; }
+.header-block {
+  background: #111;
+  padding: 28pt 48pt 20pt 48pt;
+  margin-bottom: 6pt;
+}
+.name { font-size: 24pt; font-weight: 700; color: #fff; text-align: center; margin: 0 0 6pt; letter-spacing: 2pt; }
+.contact { font-size: 8.5pt; text-align: center; color: #aaa; }
+.body-wrap { padding: 0 48pt; }
 .section { margin-top: 14pt; }
 .section-title {
-  font-size: 9pt; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1.5pt; color: #111;
-  border-bottom: 1pt solid #111; padding-bottom: 3pt; margin-bottom: 6pt;
+  font-size: 8pt; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 2pt; color: #111;
+  display: flex; align-items: center; gap: 8pt;
+  margin-bottom: 7pt;
 }
-.entry { margin-top: 5pt; }
-.entry-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 9.5pt; }
-.entry-header .date { font-weight: 400; font-size: 8.5pt; color: #555; }
-.entry-subtitle { font-size: 8.5pt; color: #555; margin: 1pt 0; }
+.section-title::after {
+  content: ''; flex: 1; height: 0.75pt; background: #ccc;
+}
+.entry { margin-top: 6pt; }
+.entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; font-size: 9.5pt; }
+.entry-header .date { font-weight: 400; font-size: 8pt; color: #888; white-space: nowrap; }
+.entry-subtitle { font-size: 8.5pt; color: #666; margin: 1.5pt 0 2pt; }
 .item-list { list-style: none; padding: 0; margin: 2pt 0 0; }
-.item-list li { padding-left: 12pt; text-indent: -7pt; margin-bottom: 1pt; }
-.item-list li::before { content: '–'; display: inline-block; width: 7pt; color: #999; }
+.item-list li { padding-left: 12pt; text-indent: -7pt; margin-bottom: 1.5pt; }
+.item-list li::before { content: '—'; display: inline-block; width: 7pt; color: #bbb; font-size: 8pt; }
 """
     },
     {
@@ -121,26 +131,37 @@ body {
 @page { size: A4; margin: 0; }
 body {
   width: 595pt; margin: 0 auto;
-  padding: 40pt 50pt 30pt 50pt;
+  padding: 0 0 28pt 0;
   box-sizing: border-box;
   font-family: 'Noto Serif SC', 'Georgia', serif;
-  font-size: 9.5pt; color: #1a1a1a; line-height: 1.5;
+  font-size: 9.5pt; color: #1a1a1a; line-height: 1.55;
 }
-.name { font-size: 24pt; font-weight: 700; color: #000; text-align: center; margin: 0 0 4pt; letter-spacing: 2pt; }
-.contact { font-size: 9pt; text-align: center; color: #444; margin-bottom: 12pt; font-family: 'Noto Sans SC', sans-serif; }
-.section { margin-top: 14pt; }
+.header-block {
+  text-align: center;
+  padding: 30pt 50pt 16pt 50pt;
+  border-bottom: 3pt double #000;
+  margin-bottom: 4pt;
+}
+.name { font-size: 26pt; font-weight: 700; color: #000; margin: 0 0 8pt; letter-spacing: 3pt; }
+.contact { font-size: 8.5pt; color: #444; font-family: 'Noto Sans SC', sans-serif; line-height: 1.6; }
+.body-wrap { padding: 0 50pt; }
+.section { margin-top: 13pt; }
 .section-title {
-  font-size: 11.5pt; font-weight: 700; color: #000;
-  border-bottom: 1.5pt solid #000; padding-bottom: 3pt; margin-bottom: 7pt;
+  font-size: 10.5pt; font-weight: 700; color: #000;
   font-family: 'Noto Sans SC', sans-serif;
+  letter-spacing: 1pt;
+  border-bottom: 1pt solid #000;
+  padding-bottom: 2.5pt; margin-bottom: 6pt;
+  display: flex; align-items: center; gap: 6pt;
 }
+.section-title::before { content: '§'; font-size: 9pt; color: #666; font-family: serif; font-weight: 400; }
 .entry { margin-top: 6pt; }
-.entry-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 10pt; font-family: 'Noto Sans SC', sans-serif; }
-.entry-header .date { font-weight: 400; font-size: 9pt; }
-.entry-subtitle { font-size: 9pt; font-style: italic; color: #333; margin: 1.5pt 0; }
+.entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; font-size: 10pt; font-family: 'Noto Sans SC', sans-serif; }
+.entry-header .date { font-weight: 400; font-size: 8.5pt; color: #555; white-space: nowrap; }
+.entry-subtitle { font-size: 9pt; font-style: italic; color: #444; margin: 1.5pt 0 2pt; }
 .item-list { list-style: none; padding: 0; margin: 2pt 0 0; }
 .item-list li { padding-left: 14pt; text-indent: -8pt; margin-bottom: 1.5pt; }
-.item-list li::before { content: '◆'; display: inline-block; width: 8pt; font-size: 5pt; color: #333; vertical-align: middle; }
+.item-list li::before { content: '◆'; display: inline-block; width: 8pt; font-size: 4.5pt; color: #555; vertical-align: middle; }
 """
     },
     {
@@ -151,24 +172,37 @@ body {
 @page { size: A4; margin: 0; }
 body {
   width: 595pt; margin: 0 auto;
-  padding: 38pt 44pt 28pt 44pt;
+  padding: 0 0 28pt 0;
   box-sizing: border-box;
   font-family: 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 9pt; color: #334155; line-height: 1.45;
+  font-size: 9pt; color: #334155; line-height: 1.5;
 }
-.name { font-size: 26pt; font-weight: 700; color: #0f172a; text-align: left; margin: 0 0 5pt; letter-spacing: -0.5pt; }
-.contact { font-size: 8.5pt; text-align: left; color: #64748b; margin-bottom: 10pt; }
-.section { margin-top: 15pt; }
+.header-block {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  padding: 26pt 44pt 20pt 44pt;
+  margin-bottom: 4pt;
+}
+.name { font-size: 26pt; font-weight: 700; color: #fff; text-align: left; margin: 0 0 6pt; letter-spacing: 0.5pt; }
+.contact { font-size: 8.5pt; text-align: left; color: #bfdbfe; }
+.body-wrap { padding: 0 44pt; }
+.section { margin-top: 14pt; }
 .section-title {
-  font-size: 10.5pt; font-weight: 700; color: #1e40af;
-  border-bottom: 1.5pt solid #bfdbfe; padding-bottom: 3pt; margin-bottom: 7pt;
+  font-size: 9.5pt; font-weight: 700; color: #1e40af;
+  text-transform: uppercase; letter-spacing: 1.5pt;
+  display: flex; align-items: center; gap: 7pt;
+  margin-bottom: 7pt;
 }
+.section-title::after { content: ''; flex: 1; height: 1pt; background: linear-gradient(to right, #bfdbfe, transparent); }
 .entry { margin-top: 5pt; }
-.entry-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 9.5pt; color: #0f172a; }
-.entry-header .date { font-weight: 400; font-size: 8.5pt; color: #64748b; }
-.entry-subtitle { font-size: 8.5pt; color: #475569; margin: 1.5pt 0; font-weight: 500; }
+.entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; font-size: 9.5pt; color: #0f172a; }
+.entry-header .date {
+  font-weight: 400; font-size: 8pt; color: #fff;
+  background: #3b82f6; padding: 0.5pt 5pt; border-radius: 2pt;
+  white-space: nowrap;
+}
+.entry-subtitle { font-size: 8.5pt; color: #475569; margin: 2pt 0 2pt; font-weight: 500; }
 .item-list { list-style: none; padding: 0; margin: 2pt 0 0; }
-.item-list li { padding-left: 12pt; text-indent: -7pt; margin-bottom: 1pt; }
+.item-list li { padding-left: 12pt; text-indent: -7pt; margin-bottom: 1.5pt; }
 .item-list li::before { content: '▸'; display: inline-block; width: 7pt; color: #3b82f6; font-size: 7pt; }
 """
     },
@@ -180,13 +214,15 @@ body {
 @page { size: A4; margin: 0; }
 body {
   width: 595pt; margin: 0 auto;
-  padding: 36pt 46pt 28pt 46pt;
+  padding: 0 0 28pt 0;
   box-sizing: border-box;
   font-family: 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 9pt; color: #1c1c1c; line-height: 1.42;
 }
+.header-block { padding: 36pt 46pt 18pt 46pt; }
+.body-wrap { padding: 0 46pt; }
 .name { font-size: 28pt; font-weight: 700; color: #000; text-align: left; margin: 0 0 4pt; letter-spacing: -1pt; }
-.contact { font-size: 8.5pt; text-align: left; color: #555; margin-bottom: 14pt; }
+.contact { font-size: 8.5pt; text-align: left; color: #555; }
 .section { margin-top: 16pt; }
 .section-title {
   font-size: 10pt; font-weight: 700; color: #fff;
@@ -212,8 +248,11 @@ def build_html(css: str, c: dict) -> str:
         '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">',
         '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">',
         f'<style>{css}</style></head><body>',
+        '<div class="header-block">',
         f'<div class="name">{esc(c["name"])}</div>',
         f'<div class="contact">{esc(c["contact"])}</div>',
+        '</div>',
+        '<div class="body-wrap">',
     ]
     for sec in c["sections"]:
         parts.append('<div class="section">')
@@ -237,6 +276,7 @@ def build_html(css: str, c: dict) -> str:
                 parts.append('</ul>')
             parts.append('</div>')
         parts.append('</div>')
+    parts.append('</div>')  # body-wrap
     parts.append('</body></html>')
     return "\n".join(parts)
 
