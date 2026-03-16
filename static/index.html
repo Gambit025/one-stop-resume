@@ -136,15 +136,19 @@ main { position: relative; z-index: 10; }
   margin: 0 auto;
 }
 
+.linear-gradient-text {
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+}
+
 .hero h1 {
   font-size: clamp(40px, 7vw, 72px);
   font-weight: 600;
   letter-spacing: -2px;
   line-height: 1.08;
-  background: linear-gradient(180deg, #ffffff 0%, var(--text-2) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   margin-bottom: 28px;
 }
 
@@ -856,7 +860,7 @@ footer {
 <!-- HERO -->
 <section class="hero">
   <div class="hero-inner">
-    <h1 class="fade-in-1">你只负责完善内容，<br>格式交给我们。</h1>
+    <h1 class="fade-in-1 linear-gradient-text">你只负责完善内容，<br>格式交给我们。</h1>
     <p class="fade-in-2">AI 驱动的简历格式重构引擎。提取你的职业精华，以像素级精度套用任意风格模板。内容 100% 忠实，不改动一个字。</p>
     <div class="hero-btns fade-in-3">
       <button class="btn btn-primary" onclick="document.getElementById('builder').scrollIntoView({behavior:'smooth'})">
