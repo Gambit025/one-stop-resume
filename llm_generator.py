@@ -560,28 +560,8 @@ def assemble_html(css: str, content: dict) -> str:
 # ═══════════════════════════════════════════════════════════
 
 def html_to_pdf(html_content: str, output_path: str):
-    from playwright.sync_api import sync_playwright
-
-    with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w", encoding="utf-8") as f:
-        f.write(html_content)
-        tmp_html = f.name
-
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
-            page.goto(f"file://{tmp_html}")
-            page.wait_for_load_state("networkidle")
-            page.wait_for_timeout(2000)
-            page.pdf(
-                path=output_path,
-                format="A4",
-                margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"},
-                print_background=True,
-            )
-            browser.close()
-    finally:
-        os.unlink(tmp_html)
+    from weasyprint import HTML
+    HTML(string=html_content).write_pdf(output_path)
 
 
 def generate_resume(resume_pdf: str, template_pdf: str, output_dir: str) -> dict:
