@@ -10,7 +10,7 @@ import tempfile
 import fitz
 import anthropic
 
-ANTHROPIC_API_KEY = os.environ.get("API", "")
+ANTHROPIC_API_KEY = os.environ.get("API") or os.environ.get("ANTHROPIC_API_KEY") or None
 TEXT_MODEL = "claude-sonnet-4-6"
 
 
