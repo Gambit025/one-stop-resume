@@ -55,9 +55,32 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
   background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* ── STARFIELD ── */
+#starfield {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: twinkle var(--dur) ease-in-out infinite var(--delay);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: var(--min-op); transform: scale(1); }
+  50%       { opacity: var(--max-op); transform: scale(1.4); }
 }
 
 /* ── NAV ── */
@@ -130,6 +153,7 @@ main { position: relative; z-index: 10; }
 .hero {
   padding: 180px 24px 120px;
   text-align: center;
+  position: relative;
 }
 
 .hero-inner {
@@ -146,19 +170,20 @@ main { position: relative; z-index: 10; }
 }
 
 .hero h1 {
-  font-size: clamp(40px, 7vw, 72px);
-  font-weight: 600;
-  letter-spacing: -2px;
-  line-height: 1.08;
+  font-size: clamp(52px, 9vw, 96px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
   margin-bottom: 28px;
 }
 
 .hero p {
-  font-size: clamp(15px, 2vw, 20px);
+  font-size: clamp(15px, 2vw, 18px);
   color: var(--text-2);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.7;
-  max-width: 600px;
+  letter-spacing: -0.01em;
+  max-width: 560px;
   margin: 0 auto 40px;
 }
 
@@ -860,6 +885,7 @@ footer {
 
 <!-- HERO -->
 <section class="hero">
+  <div id="starfield"></div>
   <div class="hero-inner">
     <h1 class="fade-in-1 linear-gradient-text">你只负责完善内容，<br>格式交给我们。</h1>
     <p class="fade-in-2">AI 驱动的简历格式重构引擎。提取你的职业精华，以像素级精度套用任意风格模板。内容 100% 忠实，不改动一个字。</p>
@@ -1084,6 +1110,31 @@ footer {
 </footer>
 
 <script>
+// ── STARFIELD ──
+(function(){
+  const container = document.getElementById('starfield');
+  const W = container.offsetWidth || window.innerWidth;
+  const H = container.offsetHeight || 600;
+  const COUNT = 80;
+  for(let i = 0; i < COUNT; i++){
+    const el = document.createElement('div');
+    el.className = 'star';
+    const size = Math.random() * 1.5 + 0.5;
+    const minOp = (Math.random() * 0.05 + 0.02).toFixed(2);
+    const maxOp = (Math.random() * 0.25 + 0.1).toFixed(2);
+    const dur   = (Math.random() * 4 + 2).toFixed(1) + 's';
+    const delay = -(Math.random() * 6).toFixed(1) + 's';
+    el.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%; top:${Math.random()*100}%;
+      --min-op:${minOp}; --max-op:${maxOp};
+      --dur:${dur}; --delay:${delay};
+      opacity:${minOp};
+    `;
+    container.appendChild(el);
+  }
+})();
+
 let currentJobId = null;
 let progressTimer = null;
 let selectedTemplateId = null;
