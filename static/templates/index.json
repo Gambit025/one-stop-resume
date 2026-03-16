@@ -3,28 +3,28 @@
     "id": "minimal",
     "name": "极简黑白",
     "desc": "简洁克制，适合技术岗",
-    "pdf": "/static/templates/minimal.pdf",
-    "thumb": "/static/templates/minimal.png"
+    "pdf": "/templates/minimal.pdf",
+    "thumb": "/templates/minimal.png"
   },
   {
     "id": "classic",
     "name": "经典学术",
     "desc": "衬线字体，传统专业风",
-    "pdf": "/static/templates/classic.pdf",
-    "thumb": "/static/templates/classic.png"
+    "pdf": "/templates/classic.pdf",
+    "thumb": "/templates/classic.png"
   },
   {
     "id": "modern",
     "name": "现代蓝调",
     "desc": "蓝色点缀，清爽现代感",
-    "pdf": "/static/templates/modern.pdf",
-    "thumb": "/static/templates/modern.png"
+    "pdf": "/templates/modern.pdf",
+    "thumb": "/templates/modern.png"
   },
   {
     "id": "bold",
     "name": "粗犷商务",
     "desc": "对比强烈，视觉冲击力强",
-    "pdf": "/static/templates/bold.pdf",
-    "thumb": "/static/templates/bold.png"
+    "pdf": "/templates/bold.pdf",
+    "thumb": "/templates/bold.png"
   }
 ]
