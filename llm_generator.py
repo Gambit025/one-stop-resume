@@ -22,6 +22,7 @@ if env_file.exists():
                 os.environ.setdefault(key.strip(), value.strip())
 
 ANTHROPIC_API_KEY = os.environ.get("API") or os.environ.get("ANTHROPIC_API_KEY") or None
+ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL") or "https://apicn.unifyllm.top"
 TEXT_MODEL = "claude-sonnet-4-6"
 
 
@@ -389,7 +390,7 @@ def extract_text(pdf_path: str) -> str:
 
 def structure_resume_via_llm(resume_text: str) -> dict:
     """LLM 只负责理解简历内容的语义结构，输出 JSON。"""
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
 
     system_prompt = """你是一个简历结构分析专家。你的唯一任务是分析简历纯文字，输出结构化 JSON。
 

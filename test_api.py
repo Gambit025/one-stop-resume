@@ -4,9 +4,11 @@ import os
 import anthropic
 
 ANTHROPIC_API_KEY = os.environ.get("API") or os.environ.get("ANTHROPIC_API_KEY") or None
+ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL") or "https://apicn.unifyllm.top"
 
 print(f"API Key 前缀: {ANTHROPIC_API_KEY[:20] if ANTHROPIC_API_KEY else 'None'}...")
 print(f"API Key 长度: {len(ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else 0}")
+print(f"Base URL: {ANTHROPIC_BASE_URL}")
 
 if not ANTHROPIC_API_KEY:
     print("\n❌ 错误: 未找到 API Key!")
@@ -15,7 +17,7 @@ if not ANTHROPIC_API_KEY:
 
 try:
     print("\n正在测试 API 连接...")
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
