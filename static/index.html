@@ -762,7 +762,10 @@ main { position: relative; z-index: 10; }
   background: rgba(255,255,255,0.02);
   border-bottom: 1px solid rgba(255,255,255,0.05);
   display: flex; align-items: center; gap: 8px;
+  justify-content: space-between;
 }
+
+.preview-bar-left { display: flex; align-items: center; gap: 8px; }
 
 .preview-dots { display: flex; gap: 5px; }
 .preview-dots span { width: 11px; height: 11px; border-radius: 50%; }
@@ -772,7 +775,24 @@ main { position: relative; z-index: 10; }
 
 .preview-label { font-size: 12px; color: var(--text-2); margin-left: 8px; }
 
-.preview-area iframe { width: 100%; height: 780px; border: none; display: block; }
+.preview-zoom { display: flex; align-items: center; gap: 6px; }
+.preview-zoom button {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-1);
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.preview-zoom button:hover { background: rgba(255,255,255,0.12); }
+.preview-zoom span { font-size: 11px; color: var(--text-2); min-width: 36px; text-align: center; }
+
+.preview-area .iframe-wrap { overflow: auto; background: #1a1a1a; }
+.preview-area iframe { border: none; display: block; transform-origin: top left; }
 
 /* ── FOOTER ── */
 footer {
@@ -998,10 +1018,20 @@ footer {
           <!-- Preview -->
           <div class="preview-area" id="previewArea" style="width:100%;margin-top:0">
             <div class="preview-bar">
-              <div class="preview-dots"><span></span><span></span><span></span></div>
-              <span class="preview-label">简历预览</span>
+              <div class="preview-bar-left">
+                <div class="preview-dots"><span></span><span></span><span></span></div>
+                <span class="preview-label">简历预览</span>
+              </div>
+              <div class="preview-zoom">
+                <button id="zoomOut" title="缩小">−</button>
+                <span id="zoomLevel">100%</span>
+                <button id="zoomIn" title="放大">+</button>
+                <button id="zoomFit" title="适应宽度" style="width:auto;padding:0 8px;font-size:11px;">适应</button>
+              </div>
             </div>
-            <iframe id="previewFrame"></iframe>
+            <div class="iframe-wrap" id="iframeWrap" style="height:780px;">
+              <iframe id="previewFrame"></iframe>
+            </div>
           </div>
 
           <div id="status"></div>
@@ -1099,12 +1129,12 @@ footer {
       <h4>联系</h4>
       <ul>
         <li><a href="mailto:ryan_25@qq.com">ryan_25@qq.com</a></li>
-        <li><a href="#">意见反馈</a></li>
+        <li><a href="mailto:ryan_25@qq.com">欢迎邮件建议反馈</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 ONE-STOP RESUME · 创始人：秦睿涵</span>
+    <span>© 2026 ONE-STOP RESUME · 创始人：秦睿涵 Ryan</span>
     <span>内容 100% 忠实于原文 · 不存储你的简历数据</span>
   </div>
 </footer>
@@ -1335,7 +1365,21 @@ async function generate() {
     currentJobId = data.job_id;
     stopProgress(true);
     document.getElementById('downloadHint').style.display = 'block';
-    document.getElementById('previewFrame').src = `/api/preview/${currentJobId}`;
+    const frame = document.getElementById('previewFrame');
+    const wrap = document.getElementById('iframeWrap');
+    frame.src = `/api/preview/${currentJobId}`;
+    frame.onload = () => {
+      const wrapW = wrap.clientWidth;
+      const docW = 794; // A4 宽度 px
+      const scale = Math.min(1, wrapW / docW);
+      frame.style.width = docW + 'px';
+      frame.style.height = '1123px'; // A4 高度
+      frame.style.transform = `scale(${scale})`;
+      wrap.style.height = Math.round(1123 * scale) + 'px';
+      document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+      frame._baseScale = scale;
+      frame._zoom = 1;
+    };
 
   } catch (err) {
     stopProgress(false);
@@ -1352,6 +1396,37 @@ async function generate() {
 function download() {
   if (currentJobId) window.location.href = `/api/download/${currentJobId}`;
 }
+
+// ── 预览缩放 ──
+(function(){
+  function applyZoom() {
+    const frame = document.getElementById('previewFrame');
+    const wrap = document.getElementById('iframeWrap');
+    if (!frame._baseScale) return;
+    const s = frame._baseScale * frame._zoom;
+    frame.style.transform = `scale(${s})`;
+    wrap.style.height = Math.round(1123 * s) + 'px';
+    document.getElementById('zoomLevel').textContent = Math.round(s * 100) + '%';
+  }
+  document.getElementById('zoomIn').addEventListener('click', () => {
+    const f = document.getElementById('previewFrame');
+    if (!f._zoom) return;
+    f._zoom = Math.min(f._zoom + 0.1, 2);
+    applyZoom();
+  });
+  document.getElementById('zoomOut').addEventListener('click', () => {
+    const f = document.getElementById('previewFrame');
+    if (!f._zoom) return;
+    f._zoom = Math.max(f._zoom - 0.1, 0.3);
+    applyZoom();
+  });
+  document.getElementById('zoomFit').addEventListener('click', () => {
+    const f = document.getElementById('previewFrame');
+    if (!f._baseScale) return;
+    f._zoom = 1;
+    applyZoom();
+  });
+})();
 </script>
 </body>
 </html>
