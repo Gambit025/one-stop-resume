@@ -1,2 +1,2 @@
 [phases.setup]
-nixPkgs = ["glib", "pango", "cairo", "gobject-introspection", "harfbuzz", "fontconfig"]
+nixPkgs = ["python312", "glib", "pango", "cairo", "gobject-introspection", "harfbuzz", "fontconfig"]
