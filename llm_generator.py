@@ -439,7 +439,11 @@ def structure_resume_via_llm(resume_text: str) -> dict:
             req = urllib.request.Request(
                 "https://api.groq.com/openai/v1/chat/completions",
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {groq_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "OneStopResume/1.0",
+                },
                 method="POST",
             )
             try:
