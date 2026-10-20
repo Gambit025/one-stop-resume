@@ -432,7 +432,6 @@ def structure_resume_via_llm(resume_text: str) -> dict:
                 max_tokens=4096,
                 system=system_prompt,
                 messages=messages,
-                temperature=temperature,
             )
             return resp.content[0].text
         except anthropic.AuthenticationError:
