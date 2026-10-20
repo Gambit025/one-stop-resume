@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+__pycache__
+*.pyc
+uploads
+llm_test_output
+one-stop-resume
+*.pdf
+!static/templates/*.pdf
+.DS_Store
