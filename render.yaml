@@ -6,7 +6,7 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /
     envVars:
-      - key: ANTHROPIC_API_KEY
+      - key: GROQ_API_KEY
         sync: false
-      - key: ANTHROPIC_BASE_URL
-        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b

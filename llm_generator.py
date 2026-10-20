@@ -7,6 +7,8 @@
 import os
 import json
 import tempfile
+import urllib.request
+import urllib.error
 import fitz
 import anthropic
 from pathlib import Path
@@ -390,7 +392,8 @@ def extract_text(pdf_path: str) -> str:
 
 def structure_resume_via_llm(resume_text: str) -> dict:
     """LLM 只负责理解简历内容的语义结构，输出 JSON。"""
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
+    groq_key = os.environ.get("GROQ_API_KEY")
+    client = None if groq_key else anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
 
     system_prompt = """你是一个简历结构分析专家。你的唯一任务是分析简历纯文字，输出结构化 JSON。
 
@@ -426,6 +429,37 @@ def structure_resume_via_llm(resume_text: str) -> dict:
 4. 只输出 JSON，不要任何解释"""
 
     def _call(messages, temperature=0.1):
+        if groq_key:
+            payload = {
+                "model": os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
+                "messages": [{"role": "system", "content": system_prompt}] + messages,
+                "max_completion_tokens": 8192,
+                "response_format": {"type": "json_object"},
+            }
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=90) as response:
+                    result = json.load(response)
+                choice = result["choices"][0]
+                if choice.get("finish_reason") == "length":
+                    raise RuntimeError("简历过长，AI 输出被截断，请减少内容后重试")
+                content = choice["message"].get("content")
+                if not content:
+                    raise RuntimeError("AI 返回了空内容，请重试")
+                return content
+            except urllib.error.HTTPError as exc:
+                if exc.code in (401, 403):
+                    raise RuntimeError("Groq API 密钥无效或没有模型访问权限，请检查服务配置") from exc
+                if exc.code == 429:
+                    raise RuntimeError("Groq 免费额度或调用频率已达上限，请稍后再试") from exc
+                raise RuntimeError(f"Groq API 请求失败（HTTP {exc.code}），请稍后重试") from exc
+            except (urllib.error.URLError, TimeoutError) as exc:
+                raise RuntimeError("无法连接 Groq API，请稍后重试") from exc
         try:
             resp = client.messages.create(
                 model=TEXT_MODEL,
