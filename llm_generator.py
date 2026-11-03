@@ -390,6 +390,29 @@ def extract_text(pdf_path: str) -> str:
     return text.strip()
 
 
+# Strict structure prevents provider JSON-mode failures and wrong field types.
+RESUME_SCHEMA = {
+    "type": "object", "additionalProperties": False,
+    "required": ["name", "contact", "sections"],
+    "properties": {
+        "name": {"type": "string"}, "contact": {"type": "string"},
+        "sections": {"type": "array", "items": {
+            "type": "object", "additionalProperties": False,
+            "required": ["title", "entries"],
+            "properties": {"title": {"type": "string"}, "entries": {"type": "array", "items": {
+                "type": "object", "additionalProperties": False,
+                "required": ["header", "date", "subtitle", "details", "items"],
+                "properties": {
+                    "header": {"type": "string"}, "date": {"type": "string"}, "subtitle": {"type": "string"},
+                    "details": {"type": "array", "items": {"type": "string"}},
+                    "items": {"type": "array", "items": {"type": "string"}},
+                }
+            }}}
+        }}
+    }
+}
+
+
 def structure_resume_via_llm(resume_text: str, *, strict=False) -> dict:
     """LLM 只负责理解简历内容的语义结构，输出 JSON。"""
     groq_key = os.environ.get("GROQ_API_KEY")
@@ -436,6 +459,9 @@ def structure_resume_via_llm(resume_text: str, *, strict=False) -> dict:
                 "max_completion_tokens": 8192,
                 "response_format": {"type": "json_object"},
             }
+            if payload['model'] in ('openai/gpt-oss-120b','openai/gpt-oss-20b'):
+                payload['response_format']={'type':'json_schema','json_schema':{'name':'resume','strict':True,'schema':RESUME_SCHEMA}}
+                payload['reasoning_effort']='low'
             req = urllib.request.Request(
                 "https://api.groq.com/openai/v1/chat/completions",
                 data=json.dumps(payload).encode("utf-8"),

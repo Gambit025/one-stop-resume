@@ -160,5 +160,5 @@ if __name__=='__main__':
             code, safe = 'invalid_output','无法可靠解析或排版这份简历，请重试或更换模板。'
         else:
             code, safe = 'generation_failed','生成未完成，请重试；若仍失败，可更换模板。'
-        atomic_json(folder/'result.json',dict(ok=False,code=code,message=safe))
+        atomic_json(folder/'result.json',dict(ok=False,code=code,message=safe,diagnostic=type(exc).__name__))
         sys.exit(1)

@@ -41,7 +41,7 @@ def run(base,kind):
         assert output.startswith(b'%PDF-') and image.startswith(b'\x89PNG')
         with fitz.open(stream=output,filetype='pdf') as doc:
             text='\n'.join(p.get_text() for p in doc)
-            assert '测试同学' in text, 'name missing in output'
+            assert ('Demo Candidate' if kind=='english_baseline' else '测试同学') in text, 'name missing in output'
             pages=len(doc)
         # Verify result routes deny access without credentials.
         try:

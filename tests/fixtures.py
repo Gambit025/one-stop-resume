@@ -5,6 +5,9 @@ import fitz
 
 def pdf_bytes(kind='short'):
     doc=fitz.open()
+    if kind=='english_baseline':
+        page=doc.new_page(); page.insert_text((50,60),'Demo Candidate\nEducation\nExample University | 2020 - 2024\nComputer Science\nExperience\nExample Company | Software Engineer\nBuilt a resume formatting tool.')
+        result=doc.tobytes();doc.close();return result
     if kind=='damaged': return b'%PDF-1.7 broken'
     count=11 if kind=='pages' else 2 if kind=='two_pages' else 1
     for index in range(count):

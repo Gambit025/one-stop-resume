@@ -159,12 +159,14 @@ class JobManager:
                         try:
                             result = json.loads((self.root/job_id/'result.json').read_text())
                             if proc.returncode or not result.get('ok'):
+                                LOG.warning('resume_job worker_exit=%s error_type=%s',proc.returncode,result.get('diagnostic','unknown'))
                                 self._fail(job, result.get('code','generation_failed'), result.get('message','生成失败，请重试。'))
                             else:
                                 job.update(state='completed', stage='completed', result=result)
                                 LOG.info('resume_job state=completed duration=%.2f pages=%s timings=%s warning=%s',
                                          time.time()-job['created'], result['pages'], result['timings'], result['verification']['needs_review'])
                         except (OSError, ValueError, KeyError):
+                            LOG.warning('resume_job worker_exit=%s no_result=true',proc.returncode)
                             self._fail(job, 'generation_failed', '生成未完成，请重试。')
                         finally:
                             self._terminate(proc)
