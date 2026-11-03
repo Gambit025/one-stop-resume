@@ -2,28 +2,28 @@
   {
     "id": "bold",
     "name": "国际学术",
-    "desc": "左侧竖线层级，黑标区块，国际范",
+    "desc": "层级鲜明 · 重点突出",
     "pdf": "/templates/bold.pdf",
     "thumb": "/templates/bold.png"
   },
   {
     "id": "minimal",
     "name": "哈佛标准",
-    "desc": "哈佛就业中心推荐，衬线经典",
+    "desc": "经典衬线 · 简洁清晰",
     "pdf": "/templates/minimal.pdf",
     "thumb": "/templates/minimal.png"
   },
   {
     "id": "classic",
     "name": "Jake's Resume",
-    "desc": "GitHub 3万星，硅谷 CS 必备",
+    "desc": "紧凑布局 · 信息丰富",
     "pdf": "/templates/classic.pdf",
     "thumb": "/templates/classic.png"
   },
   {
     "id": "modern",
     "name": "咨询精英",
-    "desc": "McKinsey 偏好，左边距对齐",
+    "desc": "留白均衡 · 对齐有序",
     "pdf": "/templates/modern.pdf",
     "thumb": "/templates/modern.png"
   }

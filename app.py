@@ -52,7 +52,7 @@ def create_app(test_config=None):
 
     def auth(job_id):
         m = manager()
-        token = request.headers.get('X-Job-Token', '') or request.cookies.get('resume_'+job_id,'')
+        token = request.headers.get('X-Job-Token', '')
         return m if m.authorized(job_id, token) else None
 
     @app.after_request
@@ -167,38 +167,6 @@ def create_app(test_config=None):
     def preview(job_id, page):
         return artifact(job_id, page)
 
-    # Compatibility for the existing frontend during round-one rollout only.
-    @app.post('/api/generate')
-    def legacy():
-        response, code = submit()
-        if code != 202:
-            return response, code
-        data = response.get_json()
-        m = manager()
-        while True:
-            state = m.status(data['job_id'])
-            if not state or state['state']=='failed':
-                return jsonify(error=(state['result']['message'] if state else '任务已过期。')), 503
-            if state['state']=='completed':
-                response = jsonify(success=True,job_id=data['job_id'],verification=state['result']['verification'])
-                response.set_cookie('resume_'+data['job_id'],data['token'],max_age=3600,
-                                    secure=request.is_secure,httponly=True,samesite='Strict',path='/api/')
-                return response
-            time.sleep(.25)
-
-    @app.get('/api/preview/<job_id>')
-    def legacy_preview(job_id):
-        m = auth(job_id)
-        status = m.status(job_id) if m else None
-        if not status or status['state']!='completed':
-            return jsonify(error='结果已过期，请重新生成。'),404
-        from flask import make_response
-        body = '<html><body style="margin:0">'+''.join(
-            f'<img style="width:100%;display:block" src="/api/preview/{job_id}/{i}">'
-            for i in range(1,status['result']['pages']+1))+'</body></html>'
-        response = make_response(body)
-        response.headers['Content-Security-Policy']="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'"
-        return response
 
     return app
 
