@@ -73,7 +73,7 @@ def create_app(test_config=None):
 
     @app.get('/health')
     def health():
-        return jsonify(status='ok', version='jobs-v1')
+        return jsonify(status='ok', version='jobs-v1', revision=os.environ.get('RENDER_GIT_COMMIT','local'))
 
     @app.get('/api/templates')
     def templates():

@@ -156,6 +156,8 @@ if __name__=='__main__':
             code, safe = 'configuration','AI 服务配置暂不可用，请联系网站维护者。'
         elif '连接' in message or 'timed out' in message:
             code, safe = 'network','AI 服务暂时连接失败，请稍后重试。'
+        elif '格式' in message or '截断' in message or '空内容' in message:
+            code, safe = 'invalid_output','AI 未能返回完整结构，请重试；若文件较长，可精简后再试。'
         elif isinstance(exc,ValueError):
             code, safe = 'invalid_output','无法可靠解析或排版这份简历，请重试或更换模板。'
         else:
