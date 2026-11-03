@@ -1,148 +1,47 @@
-<div align="center">
+# One-Stop Resume
 
-# ✦ One-Stop Resume
+[在线使用](https://one-stop-resume.onrender.com/) · 中文求职简历 PDF 排版工具
 
-### 你只管打磨实力，排版交给机器
+上传已有文字版 PDF，选择内置模板或上传自己的模板，生成、核对、逐页预览并下载新的 PDF。系统不会主动润色内容；AI 结构化仍可能产生差异，因此结果始终需要人工检查。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-2.x-black?logo=flask)](https://flask.palletsprojects.com)
+## 运行
 
-**给我任意一份神级简历模板，我还你一份专属的完美简历**
+Python 3.11；部署依赖已固定在 `requirements.txt`。生产使用仓库 Dockerfile / `render.yaml`，单 Gunicorn 进程、4 HTTP 线程、最多一个转换子进程。
 
-[**→ 立即使用**](https://one-stop-resume.up.railway.app)
-
-</div>
-
----
-
-## 为什么做这个
-
-在求职季，改简历格式绝对是世界上最反人类、最消磨意志的事情之一。在 Word 里痛苦地挣扎 2 个小时：为了对齐一个边距把整个页面的排版搞崩；为了调整行高让一页纸刚好塞下所有的项目经历；好不容易搞完，导出 PDF 一看，怎么还是透着一股廉价感？
-
-**你的时间，应该花在提升内容的含金量上，而不是被行间距折磨。**
-
-你只需上传你现有的 PDF 简历，再加上一份你一眼相中的"别人家的神级模板"——
-
-> **⏳ 30 秒内，魔法发生。**
-
-系统会自动生成一份全新的 PDF 简历：
-- **100% 内容无损** — 你的每一个字、每一个数据、每一段经历，都被原封不动地保留
-- **像素级完美复刻** — 精确剥离并应用目标模板的字体、字号、配色、模块间距与留白
-
----
-
-## 它是怎么工作的
-
-三阶段流水线。核心原则：**代码做测量，LLM 做理解**——让每个组件只干自己擅长的事。
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│    Phase  1     │     │    Phase  2     │     │    Phase  3     │
-│                 │     │                 │     │                 │
-│   PyMuPDF 精    │     │    LLM 语义     │     │   代码确定性     │
-│   确提取模板     │────▶│    结构化简历    │────▶│   组装 + 渲染   │
-│   所有排版参数   │     │    内容 → JSON  │     │   HTML → PDF   │
-│                 │     │                 │     │                 │
-│  ↓ 确定性 CSS   │     │  ↓ 零格式决策   │     │  ↓ 同输入必同输出│
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
-
-### Phase 1 — 精确样式提取（零 AI）
-
-从模板 PDF 坐标系直接读数，精确到 0.1pt：
-
-| 参数 | 示例值 | 提取方式 |
-|------|--------|----------|
-| 页边距 | 左 36.1pt / 右 33.1pt | `bbox.x0` 最小值 |
-| 字号层级 | 姓名 20pt / 标题 12pt / 正文 9pt | span size 频率分布 |
-| 行高 | 1.37 | 相邻行 y 坐标差 ÷ 字号 |
-| 分割线 | 1.5pt · #1a1a1a | drawing 路径提取 |
-| 列表标记 | ◆ vs • vs – | 首字符检测 |
-| 日期对齐 | 右对齐 | origin_x > 页宽 × 0.6 |
-
-**零 AI 参与，零猜测，输出纯确定性 CSS。**
-
-### Phase 2 — 语义结构化（LLM）
-
-LLM 只回答一个问题：「这段文字是公司名、职位、日期还是描述？」
-
-```json
-{
-  "name": "张三",
-  "contact": "138xxxx  |  xxx@gmail.com  |  北京",
-  "sections": [
-    {
-      "title": "教育经历",
-      "entries": [
-        {
-          "header": "北京大学",
-          "date": "2020.09 – 2024.06",
-          "subtitle": "计算机科学与技术  本科",
-          "items": ["GPA 3.9 / 4.0", "ACM 校队成员"]
-        }
-      ]
-    }
-  ]
-}
-```
-
-LLM **不参与任何格式决策**——不决定字号、不决定边距、不决定颜色。
-
-### Phase 3 — 确定性组装（代码）
-
-Phase 1 的 CSS + Phase 2 的 JSON → HTML → Playwright 渲染为 PDF。同样的输入永远产生同样的输出，没有任何随机性。
-
----
-
-## 为什么不直接让 LLM 生成 HTML？
-
-> 我们试过了。效果很差。
-
-| 指标 | LLM 全权负责 | **本方案（各司其职）** |
-|------|-------------|----------------------|
-| 字号精度 | LLM 猜 12pt（实际 9pt）| ✅ 代码测量 9.0pt |
-| 边距精度 | 凭感觉给 | ✅ 测量 36.1pt / 33.1pt |
-| 行高精度 | 写 1.5（实际 1.37）| ✅ y 坐标计算 1.37 |
-| 分割线 | 有时有，有时没有 | ✅ 代码提取 1.5pt #1a1a1a |
-| 列表标记 | 随机 • 或 ◆ | ✅ 代码提取 ◆ |
-| 生成耗时 | 2–3 分钟 | ✅ **~30 秒** |
-| 结果一致性 | 每次不一样 | ✅ **每次一样** |
-
-**LLM 不擅长精确数值，但擅长理解语义。让它做擅长的事。**
-
----
-
-## 快速开始
-
-```bash
-# 1. 安装依赖
+```sh
 pip install -r requirements.txt
-playwright install chromium
-
-# 2. 配置 Kimi API Key
-export KIMI_API_KEY=your_key_here
-
-# 3. 启动
+python -m playwright install --with-deps --only-shell chromium
+python download_fonts.py
+export GROQ_API_KEY=your_key
 python app.py
 ```
 
-打开 http://localhost:8080，上传两份 PDF，等 30 秒。
+浏览器打开 `http://127.0.0.1:8080`。密钥只设为服务环境变量，不能写入提交。`GROQ_MODEL` 默认 `openai/gpt-oss-120b`。旧 Anthropic 兼容逻辑仅用于未配置 Groq 的本地兼容；生产应设置 Groq 密钥。
 
----
+## 任务接口
 
-## Tech Stack
+- `POST /api/jobs`：multipart `resume`，以及 `template_id` 或 `template`；返回 202 与 `job_id`、`token`、`expires_at`。
+- `GET /api/jobs/<id>`：真实阶段、任务状态、耗时、核对结果。
+- `GET /api/preview/<id>/<page>`：最终 PDF 的逐页 PNG，页码从 1 开始。
+- `GET /api/download/<id>`：下载 PDF。
+- `DELETE /api/jobs/<id>`：取消任务并删除本地任务文件。
+- `GET /health`：独立健康检查。
 
-| 组件 | 技术 | 用途 |
-|------|------|------|
-| 样式提取 | PyMuPDF | 从 PDF 坐标系精确测量排版参数 |
-| 语义理解 | Kimi LLM | 结构化简历内容，输出 JSON |
-| PDF 渲染 | Playwright (headless Chromium) | HTML → PDF |
-| 后端 | Flask | API 服务 |
-| 前端 | Vanilla HTML/CSS/JS | 无框架，零依赖 |
+除提交、模板列表和健康检查外，任务接口必须携带 `X-Job-Token`。凭证仅存在当前服务内存与浏览器会话。不要把凭证放在 URL 中。旧同步生成接口已移除。
 
----
+每份文件最多 10 MB、10 页、20,000 字符。拒绝损坏、加密和无可提取文字的 PDF。队列限制为一个运行、两个等待，超限返回 429；从接收起最多 120 秒，之后终止转换进程组。进度不依靠计时器模拟。
 
-## License
+原始输入和中间 HTML 在成功后删除。结果一小时后失效，在五分钟清理周期或访问时删除；失败、取消、超时会删除任务目录。重启不恢复任务。结果和正文不进入公共缓存或应用日志。临时磁盘不是持久存储。
 
-MIT · 作者：秦睿涵 · ryan_25@qq.com
+## 测试与维护
+
+```sh
+python -m unittest discover -s tests -v
+node --check static/app.js
+# 本机界面验收：真实 PDF 渲染、确定性 AI 替身，不调用外部 API
+python -m tests.ui_server
+# 显式线上验收：只会生成/上传虚构数据，调用免费额度并删除测试结果
+python -m tests.live_smoke --fixtures short dense two_pages mixed
+```
+
+三轮交付证据及性能限制见 [docs/DELIVERY.md](docs/DELIVERY.md)。Render 免费实例会休眠；Groq 免费额度和模型可用性受平台限制。不要把单次测试当作稳定性能承诺。

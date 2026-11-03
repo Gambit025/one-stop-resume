@@ -55,6 +55,10 @@ def characters(text):
 def verify(source, structured, rendered):
     """Conservative multiset check; reports differences, never claims semantic equivalence."""
     src = characters(source)
+    def fragments(text):
+        chunks=re.findall(r'[a-zA-Z]+|[\u4e00-\u9fff]+|[\w.+-]+@[\w.-]+',unicodedata.normalize('NFKC',text).lower())
+        return collections.Counter(token for chunk in chunks for token in ([chunk] if not re.search(r'[\u4e00-\u9fff]',chunk) else [chunk[i:i+2] for i in range(max(1,len(chunk)-1))]))
+    source_fragments=fragments(source)
     checks = []
     for label,text in [('structure',structured),('pdf',rendered)]:
         out = characters(text)
@@ -62,11 +66,13 @@ def verify(source, structured, rendered):
         numbers = collections.Counter(re.findall(r'\d+(?:[.\-/]\d+)*',source))
         out_numbers = collections.Counter(re.findall(r'\d+(?:[.\-/]\d+)*',text))
         checks.append(dict(target=label, missing_characters=missing, added_characters=added,
+                           missing_fragments=sum((source_fragments-fragments(text)).values()),
+                           added_fragments=sum((fragments(text)-source_fragments).values()),
                            missing_numbers=sum((numbers-out_numbers).values()),
                            added_numbers=sum((out_numbers-numbers).values())))
     # Display only counts; never include resume fragments in logs or error messages.
-    return dict(needs_review=any(any(c[k] for k in ('missing_characters','added_characters','missing_numbers','added_numbers')) for c in checks),
-                checks=checks, note='自动核对字符和数字数量，无法保证语义、顺序及版式完全一致，请人工检查姓名、联系方式、日期和经历。')
+    return dict(needs_review=any(any(c[k] for k in ('missing_characters','added_characters','missing_numbers','added_numbers','missing_fragments','added_fragments')) for c in checks),
+                checks=checks, note='自动核对字符、词句片段和数字，无法保证语义、顺序及版式完全一致，请人工检查姓名、联系方式、日期和经历。')
 
 
 def run(folder):
@@ -101,19 +107,34 @@ def run(folder):
     phase('understanding')
     start = time.monotonic()
     content = validate_content(structure_resume_via_llm(source))
+    initial_check = verify(source,flatten(content),flatten(content))
+    if initial_check['needs_review']:
+        # One bounded fidelity retry; do not hide differences or silently drop the first result.
+        try:
+            candidate = validate_content(structure_resume_via_llm(source,strict=True))
+            def difference(value):
+                check=verify(source,flatten(value),flatten(value))['checks'][0]
+                return check['missing_characters']+check['added_characters']+check['missing_fragments']+check['added_fragments']+5*(check['missing_numbers']+check['added_numbers'])
+            if difference(candidate)<difference(content):
+                content=candidate
+        except Exception:
+            pass
     timings['understanding'] = round(time.monotonic()-start,3)
     phase('rendering')
     start = time.monotonic()
     html = assemble_html(generate_css(style),content)
     (folder/'output.html').write_text(html,encoding='utf-8')
     html_to_pdf(html,str(folder/'output.pdf'))
+    timings['pdf'] = round(time.monotonic()-start,3)
+    preview_start = time.monotonic()
     with fitz.open(folder/'output.pdf') as pdf:
         if len(pdf)>20:
             raise ValueError('too_many_output_pages')
         output_text = '\n'.join(p.get_text() for p in pdf)
         pages = len(pdf)
         for i,page in enumerate(pdf):
-            page.get_pixmap(matrix=fitz.Matrix(1.35,1.35),alpha=False).save(folder/f'page-{i+1}.png')
+            page.get_pixmap(matrix=fitz.Matrix(1.1,1.1),alpha=False).save(folder/f'page-{i+1}.png')
+    timings['preview'] = round(time.monotonic()-preview_start,3)
     timings['rendering'] = round(time.monotonic()-start,3)
     verification = verify(source,flatten(content),output_text)
     # Raw resume and HTML are no longer needed once preview/PDF verification finishes.

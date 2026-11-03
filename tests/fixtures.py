@@ -11,6 +11,7 @@ def pdf_bytes(kind='short'):
         page=doc.new_page()
         if kind!='scan':
             lines=['测试同学','教育经历','示例大学 计算机科学 2020.09-2024.06','实习经历','示例公司 软件工程师 2024.07-2025.06','优化服务延迟 30%，维护 12 个项目。']
+            if kind=='two_pages': lines += [f'项目 {index+1}-{i+1}：设计数据处理流程，提升系统稳定性。' for i in range(36)]
             if kind=='mixed': lines+=['Example University | Software Engineer','Built a tool for 120 users.']
             if kind=='dense': lines+=['项目经历：设计数据处理流程，提升系统稳定性。']*32
             if kind=='text_limit':

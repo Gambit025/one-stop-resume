@@ -75,6 +75,30 @@ class API(unittest.TestCase):
         self.manager.cleanup()
         self.assertFalse(self.manager.authorized(job['job_id'],job['token']))
         self.assertFalse((Path(self.temp.name)/job['job_id']).exists())
+    def test_cancel_running_allows_next_job(self):
+        first=self.submit().json; second=self.submit().json
+        self.client.delete('/api/jobs/'+first['job_id'],headers={'X-Job-Token':first['token']})
+        self.assertEqual(self.wait(second)['state'],'completed')
+        self.assertFalse((Path(self.temp.name)/first['job_id']).exists())
+    def test_crash_is_safe_and_does_not_block_queue(self):
+        self.script.write_text("import sys; sys.exit(1)\n")
+        job=self.submit().json
+        self.assertEqual(self.wait(job)['state'],'failed')
+        self.assertEqual(self.manager.jobs[job['job_id']]['result']['code'],'generation_failed')
+    def test_restart_invalidates_credentials(self):
+        job=self.submit().json; self.wait(job)
+        self.manager.close()
+        self.manager=JobManager(self.temp.name,command=[sys.executable,str(self.script)])
+        self.app.extensions['jobs']=self.manager
+        self.assertFalse(self.manager.authorized(job['job_id'],job['token']))
+        self.assertFalse((Path(self.temp.name)/job['job_id']).exists())
+    def test_unknown_template_and_body_limit(self):
+        response=self.client.post('/api/jobs',data={'resume':(io.BytesIO(pdf_bytes()),'resume.pdf'),'template_id':'../../etc'})
+        self.assertEqual(response.status_code,400)
+        self.app.config['MAX_CONTENT_LENGTH']=512
+        response=self.submit()
+        self.assertEqual(response.status_code,413)
+        self.assertEqual(len(self.manager.jobs),0)
     def test_user_file_not_served_as_static(self):
         self.assertEqual(self.client.get('/uploads/resume.pdf').status_code,404)
         self.assertEqual(self.client.get('/health').json['status'],'ok')
@@ -91,6 +115,7 @@ class Content(unittest.TestCase):
     def test_content_mismatch_is_not_silent_success(self):
         v=verify('测试同学 2024 30%','测试同学 2025 30%','测试同学 2025')
         self.assertTrue(v['needs_review']); self.assertGreater(v['checks'][0]['missing_numbers'],0)
-        self.assertFalse(verify('测试同学 2024','测试 同学\n2024','测试同学2024')['needs_review'])
+        self.assertFalse(verify('测试同学 2024','测试同学\n2024','测试同学2024')['needs_review'])
+        self.assertTrue(verify('王晓明 2024','明晓王 2024','明晓王 2024')['needs_review'])
 
 if __name__=='__main__': unittest.main()

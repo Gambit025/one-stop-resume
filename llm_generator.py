@@ -390,7 +390,7 @@ def extract_text(pdf_path: str) -> str:
     return text.strip()
 
 
-def structure_resume_via_llm(resume_text: str) -> dict:
+def structure_resume_via_llm(resume_text: str, *, strict=False) -> dict:
     """LLM 只负责理解简历内容的语义结构，输出 JSON。"""
     groq_key = os.environ.get("GROQ_API_KEY")
     client = None if groq_key else anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
@@ -494,6 +494,8 @@ def structure_resume_via_llm(resume_text: str) -> dict:
             return json.loads(repair_json(raw))
 
     user_msg = f"请分析以下简历的结构：\n\n{resume_text}"
+    if strict:
+        user_msg += "\n\n校验要求：逐行复核上面的原文，不要省略英文、重复出现的信息、项目编号、数字或短句；无法归类的文字按原文放入 details，不能总结、翻译或去重。"
     raw = _call([{"role": "user", "content": user_msg}])
     try:
         return _parse(raw)

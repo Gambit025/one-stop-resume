@@ -13,7 +13,7 @@ import sys
 import threading
 import time
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger('gunicorn.error')
 TERMINAL = {'completed', 'failed', 'expired'}
 
 

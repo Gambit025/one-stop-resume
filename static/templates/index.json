@@ -4,27 +4,31 @@
     "name": "国际学术",
     "desc": "层级鲜明 · 重点突出",
     "pdf": "/templates/bold.pdf",
-    "thumb": "/templates/bold.png"
+    "thumb": "/templates/bold-thumb.webp",
+    "preview": "/templates/bold-preview.webp"
   },
   {
     "id": "minimal",
     "name": "哈佛标准",
     "desc": "经典衬线 · 简洁清晰",
     "pdf": "/templates/minimal.pdf",
-    "thumb": "/templates/minimal.png"
+    "thumb": "/templates/minimal-thumb.webp",
+    "preview": "/templates/minimal-preview.webp"
   },
   {
     "id": "classic",
     "name": "Jake's Resume",
     "desc": "紧凑布局 · 信息丰富",
     "pdf": "/templates/classic.pdf",
-    "thumb": "/templates/classic.png"
+    "thumb": "/templates/classic-thumb.webp",
+    "preview": "/templates/classic-preview.webp"
   },
   {
     "id": "modern",
     "name": "咨询精英",
     "desc": "留白均衡 · 对齐有序",
     "pdf": "/templates/modern.pdf",
-    "thumb": "/templates/modern.png"
+    "thumb": "/templates/modern-thumb.webp",
+    "preview": "/templates/modern-preview.webp"
   }
 ]

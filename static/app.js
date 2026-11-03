@@ -5,11 +5,11 @@
   const labels = {queued:'等待处理', reading:'正在读取文件与模板', understanding:'AI 正在整理内容结构', rendering:'正在排版并生成 PDF', completed:'转换完成'};
   const sessionKey = 'resume-job-v1';
   let templates = [], selectedTemplate = 'minimal', customFile = null, resumeFile = null;
-  let credential = null, busy = false, timer = null, pollStarted = 0, lastState = null;
+  let credential = null, busy = false, timer = null, pollStarted = 0, lastState = null, polling = false;
   let previewURLs = [], zoom = 1, previewGeneration = 0, warning = false;
   const remember = value => { try {value ? sessionStorage.setItem(sessionKey,JSON.stringify(value)) : sessionStorage.removeItem(sessionKey);} catch (_) {} };
   const headers = () => ({'X-Job-Token':credential.token});
-  const showMessage = text => {$('message').textContent=text; $('message').hidden=!text;};
+  const showMessage = (text, kind='error') => {$('message').textContent=text; $('message').hidden=!text; $('message').classList.toggle('info',kind==='info');};
   function updateButton() {
     $('generateBtn').disabled = busy || !resumeFile || (!customFile && !templates.some(t=>t.id===selectedTemplate)) || !$('consent').checked;
     $('inputFields').disabled = busy;
@@ -27,7 +27,7 @@
     if (!file || busy) return;
     const error=fileError(file); $('fileError').textContent=error;
     if (error) {$('resumeInput').value=''; return;}
-    resumeFile=file;
+    resumeFile=file;showMessage('');$('resumeDrop').classList.add('has-file');
     $('fileTitle').textContent=file.name;
     $('fileDetail').textContent=(file.size/1024/1024).toFixed(2)+' MB · 已选择';
     $('browseLabel').textContent='替换文件';
@@ -61,7 +61,7 @@
   function samplePreview() {
     if(lastState?.state==='completed')return;
     const template=templates.find(t=>t.id===selectedTemplate);if(!template)return;
-    revokePreview(); const img=new Image();img.src=template.thumb;img.width=794;img.height=1123;img.className='paper';
+    revokePreview(); const img=new Image();img.src=template.preview||template.thumb;img.width=794;img.height=1123;img.className='paper';
     img.alt=template.name+'模板示意，示例内容不是你的简历';
     $('paperStack').replaceChildren(img);
     $('previewTitle').textContent='版式预览';$('previewSubtitle').textContent=template.name+' · 模板示意';
@@ -92,7 +92,8 @@
   }
   $('retryTemplates').addEventListener('click',loadTemplates);
   function applyZoom(){
-    const available=Math.max(1,$('previewViewport').clientWidth-(window.innerWidth<=700?30:56));
+    const box=getComputedStyle($('previewViewport'));
+    const available=Math.max(1,$('previewViewport').clientWidth-parseFloat(box.paddingLeft)-parseFloat(box.paddingRight));
     const width=Math.max(100,Math.round(Math.min(available,794)*zoom));
     $('paperStack').style.width=width+'px';
     $('zoomLevel').textContent=Math.round(width/794*100)+'%';
@@ -124,14 +125,15 @@
     $('stageHint').textContent=state.state==='queued' ? '当前排队位置：'+state.queue_position+'。最多同时处理一份简历。' : '后台正在实际处理，生成总等待时间最多 120 秒。';
   }
   async function poll(){
-    if(!credential)return;
+    if(!credential||polling)return;
+    polling=true;
     const thisId=credential.job_id;
     try{
       const response=await request('/api/jobs/'+thisId,{headers:headers()});
       const state=await response.json();if(thisId!==credential?.job_id)return;
       lastState=state;
       if(state.state==='completed'){
-        setBusy(false);$('jobStatus').hidden=true;showMessage('');await showResult(state);return;
+        $('jobStatus').hidden=true;showMessage('');await showResult(state);if(thisId===credential?.job_id)setBusy(false);return;
       }
       if(state.state==='failed'){
         setBusy(false);$('jobStatus').hidden=true;showMessage(state.result?.message||'生成失败，请重试。');remember(null);return;
@@ -145,20 +147,20 @@
       showMessage(error.message);
       if(Date.now()-pollStarted<135000){timer=setTimeout(poll,document.hidden?10000:4000);}
       else{setBusy(false);$('stageHint').textContent='查询已停止。刷新可恢复查询，或取消当前任务。';}
-    }
+    }finally{polling=false;}
   }
-  function resetExpired(message){
+  function resetExpired(message,kind='error'){
     clearTimeout(timer);credential=null;lastState=null;remember(null);setBusy(false);
-    $('jobStatus').hidden=true;$('resultActions').hidden=true;revokePreview();samplePreview();showMessage(message);
+    $('jobStatus').hidden=true;$('resultActions').hidden=true;revokePreview();samplePreview();showMessage(message,kind);
   }
   async function showResult(state){
     const result=state.result, id=credential.job_id;
     warning=!!result.verification.needs_review;
     $('resultActions').hidden=false;$('pageCount').textContent=result.pages+' 页';
     $('reviewAckWrap').hidden=!warning;$('reviewAck').checked=false;
-    const counts=result.verification.checks.filter(c=>c.missing_characters||c.added_characters||c.missing_numbers||c.added_numbers);
+    const counts=result.verification.checks.filter(c=>c.missing_characters||c.added_characters||c.missing_numbers||c.added_numbers||c.missing_fragments||c.added_fragments);
     $('reviewNotice').classList.toggle('warning',warning);
-    $('reviewNotice').textContent=warning ? '自动核对发现差异：'+counts.map(c=>(c.target==='pdf'?'PDF':'内容结构')+'中可能缺少 '+c.missing_characters+' 个字符、新增 '+c.added_characters+' 个字符，数字差异 '+(c.missing_numbers+c.added_numbers)+' 处').join('；')+'。请对照原文检查，排版和文本提取也可能造成差异。' : '自动字符与数字核对未发现差异。仍请人工检查姓名、联系方式、日期、经历和排版。';
+    $('reviewNotice').textContent=warning ? '自动核对发现差异：'+counts.map(c=>(c.target==='pdf'?'PDF':'内容结构')+'中可能缺少 '+c.missing_characters+' 个字符、新增 '+c.added_characters+' 个字符，数字差异 '+(c.missing_numbers+c.added_numbers)+' 处、词句片段差异 '+((c.missing_fragments||0)+(c.added_fragments||0))+' 处').join('；')+'。请对照原文检查，排版和文本提取也可能造成差异。' : '自动字符、词句片段与数字核对未发现差异。仍请人工检查姓名、联系方式、日期、经历和排版。';
     $('downloadBtn').disabled=warning;
     $('expiryText').textContent='结果有效至 '+new Date(state.expires_at*1000).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
     $('downloadStatus').textContent='请在一小时内下载，服务重启也会使结果失效。';
@@ -183,6 +185,7 @@
   $('resumeForm').addEventListener('submit',async event=>{
     event.preventDefault();if($('generateBtn').disabled)return;
     clearTimeout(timer);showMessage('');setBusy(true);$('resultActions').hidden=true;
+    $('previewSubtitle').textContent='正在生成新结果，预览将在完成后更新';
     $('jobStatus').hidden=false;$('stageLabel').textContent='正在上传并验证 PDF';$('elapsed').textContent='';$('stageHint').textContent='请稍候，正在验证文件。';
     const form=new FormData();form.append('resume',resumeFile);
     if(customFile)form.append('template',customFile);else form.append('template_id',selectedTemplate);
@@ -199,8 +202,8 @@
     try{
       await request('/api/jobs/'+id,{method:'DELETE',headers:headers()});
       if(credential?.job_id!==id)return;
-      resetExpired('任务文件已删除。你可以继续生成新的简历。');
-    }catch(error){if(error.status===404)resetExpired('任务已过期或文件已删除。');else showMessage('删除未能确认：'+error.message+' 文件仍按原保留期限自动清理。');}
+      resetExpired('任务文件已删除。你可以继续生成新的简历。','info');
+    }catch(error){if(error.status===404)resetExpired('任务已过期或文件已删除。','info');else showMessage('删除未能确认：'+error.message+' 文件仍按原保留期限自动清理。');}
   }
   $('deleteJob').addEventListener('click',removeJob);$('cancelJob').addEventListener('click',removeJob);
   $('downloadBtn').addEventListener('click',async()=>{
