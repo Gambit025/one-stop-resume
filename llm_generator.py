@@ -507,7 +507,7 @@ def structure_resume_via_llm(resume_text: str) -> dict:
         try:
             return _parse(raw2)
         except (json.JSONDecodeError, ValueError) as e:
-            raise RuntimeError(f"LLM 返回格式无法解析，请重试。原始输出片段：{raw2[:200]}") from e
+            raise RuntimeError("LLM 返回格式无法解析，请重试。") from e
 
 
 # ═══════════════════════════════════════════════════════════
@@ -620,12 +620,20 @@ def assemble_html(css: str, content: dict) -> str:
 
 def html_to_pdf(html_content: str, output_path: str):
     from playwright.sync_api import sync_playwright
+    html_path = Path(output_path).with_suffix('.html')
+    html_path.write_text(html_content, encoding='utf-8')
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page()
-        page.set_content(html_content, wait_until="networkidle")
-        page.pdf(path=output_path, print_background=True, format="A4")
-        browser.close()
+        try:
+            page = browser.new_page()
+            # A local file origin allows local Chinese fonts to load reliably.
+            page.route('http://**/*', lambda route: route.abort())
+            page.route('https://**/*', lambda route: route.abort())
+            page.goto(html_path.resolve().as_uri(), wait_until='domcontentloaded', timeout=15000)
+            page.evaluate('() => document.fonts.ready')
+            page.pdf(path=output_path, print_background=True, format='A4')
+        finally:
+            browser.close()
 
 
 def generate_resume(resume_pdf: str, template_pdf: str, output_dir: str) -> dict:

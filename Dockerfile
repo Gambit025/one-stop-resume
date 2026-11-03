@@ -10,9 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && python -m playwright install --with-deps --only-shell chromium \
     && rm -rf /var/lib/apt/lists/*
 
-COPY app.py llm_generator.py download_fonts.py ./
+COPY app.py job_runner.py job_worker.py llm_generator.py download_fonts.py ./
 COPY static/ ./static/
 RUN python download_fonts.py
 
 # One worker limits simultaneous Chromium processes on the free instance.
-CMD ["sh", "-c", "exec gunicorn app:app --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 1 --timeout 180 --access-logfile - --error-logfile -"]
+CMD ["sh", "-c", "exec gunicorn app:app --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 4 --timeout 30 --access-logfile - --error-logfile -"]
