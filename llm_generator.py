@@ -10,7 +10,6 @@ import tempfile
 import urllib.request
 import urllib.error
 import fitz
-import anthropic
 from pathlib import Path
 
 # 尝试从 .env 文件加载环境变量
@@ -416,7 +415,10 @@ RESUME_SCHEMA = {
 def structure_resume_via_llm(resume_text: str, *, strict=False) -> dict:
     """LLM 只负责理解简历内容的语义结构，输出 JSON。"""
     groq_key = os.environ.get("GROQ_API_KEY")
-    client = None if groq_key else anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
+    client = None
+    if not groq_key:
+        import anthropic
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=ANTHROPIC_BASE_URL)
 
     system_prompt = """你是一个简历结构分析专家。你的唯一任务是分析简历纯文字，输出结构化 JSON。
 
